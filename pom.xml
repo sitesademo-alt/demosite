@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.example</groupId>
+    <artifactId>vuln-dep-testbed</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <name>vuln-dep-testbed</name>
+    <description>
+        Intentionally vulnerable third-party dependencies (Log4Shell + friends)
+        used to test Software Composition Analysis (SCA) and auto-remediation tooling,
+        including whether a proposed fix is COMPATIBLE with the application.
+    </description>
+
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- =======================================================================
+             Dependency versions live here as properties so they can be overridden
+             from the command line, e.g.:
+                 mvn test -Dlog4j.version=2.17.1
+             or switched wholesale with the profiles defined below.
+
+             DEFAULT VALUES BELOW ARE INTENTIONALLY VULNERABLE.
+             ======================================================================= -->
+        <log4j.version>2.14.1</log4j.version>            <!-- CVE-2021-44228 (Log4Shell) -->
+        <commons.text.version>1.9</commons.text.version>  <!-- CVE-2022-42889 (Text4Shell) -->
+        <jackson.version>2.9.8</jackson.version>          <!-- multiple databind CVEs -->
+        <junit.version>4.13.2</junit.version>
+    </properties>
+
+    <dependencies>
+        <!-- Apache Log4j 2 — the Log4Shell vulnerability lives in log4j-core -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>${log4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>${log4j.version}</version>
+        </dependency>
+
+        <!-- Apache Commons Text — Text4Shell interpolation vulnerability -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-text</artifactId>
+            <version>${commons.text.version}</version>
+        </dependency>
+
+        <!-- Jackson Databind — historically a large CVE surface -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+
+        <!-- Test-only -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <profiles>
+        <!-- =======================================================================
+             mvn -Ppatched test
+             Overrides every vulnerable dependency with the recommended
+             SECURITY-FIXED version that is still API-COMPATIBLE with this app.
+             Expected result: BUILD SUCCESS, all tests pass.
+             (This is what a *good* remediation looks like.)
+             ======================================================================= -->
+        <profile>
+            <id>patched</id>
+            <properties>
+                <log4j.version>2.17.1</log4j.version>
+                <commons.text.version>1.10.0</commons.text.version>
+                <jackson.version>2.15.4</jackson.version>
+            </properties>
+        </profile>
+
+        <!-- =======================================================================
+             mvn -Pbroken test
+             Demonstrates an INCOMPATIBLE "fix". commons-text 1.0 predates the
+             StringSubstitutor / createInterpolator() API this app depends on,
+             so the code no longer compiles.
+             Expected result: BUILD FAILURE (compilation error).
+             (This is what your tool must AVOID proposing.)
+             ======================================================================= -->
+        <profile>
+            <id>broken</id>
+            <properties>
+                <commons.text.version>1.0</commons.text.version>
+            </properties>
+        </profile>
+    </profiles>
+</project>
