@@ -29,9 +29,9 @@
 
              DEFAULT VALUES BELOW ARE INTENTIONALLY VULNERABLE.
              ======================================================================= -->
-        <log4j.version>2.14.1</log4j.version>            <!-- CVE-2021-44228 (Log4Shell) -->
-        <commons.text.version>1.9</commons.text.version>  <!-- CVE-2022-42889 (Text4Shell) -->
-        <jackson.version>2.9.8</jackson.version>          <!-- multiple databind CVEs -->
+        <log4j.version>2.26.1-lineaje-01</log4j.version>            <!-- CVE-2021-44228 (Log4Shell) -->
+        <commons.text.version>1.15.0</commons.text.version>  <!-- CVE-2022-42889 (Text4Shell) -->
+        <jackson.version>2.22.1</jackson.version>          <!-- multiple databind CVEs -->
         <junit.version>4.13.2</junit.version>
     </properties>
 
